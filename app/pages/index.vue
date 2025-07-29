@@ -1,4 +1,6 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  // Remove the navigation functions since we'll use NuxtLink
+</script>
 
 <template>
   <div
@@ -34,6 +36,22 @@
           Login
         </button>
       </form>
+
+      <!-- Links -->
+      <div class="mt-6 text-center space-y-2">
+        <NuxtLink
+          :to="{ path: '/forgot-password' }"
+          class="block text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm transition-colors duration-200"
+        >
+          Forgot your password?
+        </NuxtLink>
+        <NuxtLink
+          :to="{ path: '/dashboard' }"
+          class="block text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm transition-colors duration-200"
+        >
+          Continue to Dashboard →
+        </NuxtLink>
+      </div>
     </div>
   </div>
 </template>
