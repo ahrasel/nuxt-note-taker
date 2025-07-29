@@ -1,54 +1,3 @@
-<script setup lang="ts">
-  definePageMeta({
-    layout: "default",
-  });
-
-  // Sample data - replace with real data later
-  const notes = ref([
-    {
-      id: 1,
-      title: "Project Ideas",
-      content: "List of upcoming project ideas and concepts to explore...",
-      category: "Work",
-      color: "bg-blue-100 dark:bg-blue-900/20",
-      updated: "2 hours ago",
-      isPinned: true,
-    },
-    {
-      id: 2,
-      title: "Meeting Notes",
-      content: "Important points discussed in today's team meeting...",
-      category: "Work",
-      color: "bg-green-100 dark:bg-green-900/20",
-      updated: "1 day ago",
-      isPinned: false,
-    },
-    {
-      id: 3,
-      title: "Shopping List",
-      content: "Groceries and items to buy this weekend...",
-      category: "Personal",
-      color: "bg-yellow-100 dark:bg-yellow-900/20",
-      updated: "3 days ago",
-      isPinned: true,
-    },
-    {
-      id: 4,
-      title: "Book Recommendations",
-      content: "List of books recommended by friends and colleagues...",
-      category: "Personal",
-      color: "bg-purple-100 dark:bg-purple-900/20",
-      updated: "1 week ago",
-      isPinned: false,
-    },
-  ]);
-
-  const searchQuery = ref("");
-  const selectedCategory = ref("All");
-  const categories = ["All", "Work", "Personal", "Ideas", "Important"];
-  const isGridView = ref(true);
-</script>
-
 <template>
   <div class="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
     <!-- Header -->
@@ -70,7 +19,7 @@
           <div class="hidden md:block flex-1 max-w-lg mx-8">
             <div class="relative">
               <input
-                v-model="searchQuery"
+                v-model="notesStore.searchQuery"
                 type="text"
                 placeholder="Search notes..."
                 class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -93,23 +42,10 @@
 
           <!-- User Menu -->
           <div class="flex items-center space-x-4">
-            <!-- Mobile Search Button -->
-            <button
-              class="md:hidden p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </button>
-
             <!-- Theme Toggle -->
             <button
               class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+              @click="toggleDarkMode"
             >
               <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -143,7 +79,7 @@
     >
       <div class="relative">
         <input
-          v-model="searchQuery"
+          v-model="notesStore.searchQuery"
           type="text"
           placeholder="Search notes..."
           class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
@@ -171,10 +107,11 @@
         <!-- Categories and View Toggle -->
         <div class="flex flex-wrap items-center gap-2">
           <select
-            v-model="selectedCategory"
+            v-model="notesStore.selectedCategory"
             class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
           >
-            <option v-for="category in categories" :key="category" :value="category">
+            <option value="">All Categories</option>
+            <option v-for="category in notesStore.categories" :key="category" :value="category">
               {{ category }}
             </option>
           </select>
@@ -184,11 +121,11 @@
             <button
               :class="[
                 'p-2 rounded transition-colors',
-                isGridView
+                notesStore.isGridView
                   ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white',
               ]"
-              @click="isGridView = true"
+              @click="notesStore.isGridView = true"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -202,11 +139,11 @@
             <button
               :class="[
                 'p-2 rounded transition-colors',
-                !isGridView
+                !notesStore.isGridView
                   ? 'bg-white dark:bg-gray-600 text-gray-900 dark:text-white shadow-sm'
                   : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white',
               ]"
-              @click="isGridView = false"
+              @click="notesStore.isGridView = false"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -223,6 +160,7 @@
         <!-- Add Note Button -->
         <button
           class="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 font-medium"
+          @click="openNoteModal()"
         >
           <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -240,92 +178,36 @@
       <div
         :class="[
           'gap-4',
-          isGridView
+          notesStore.isGridView
             ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
             : 'flex flex-col space-y-4',
         ]"
       >
         <div
-          v-for="note in notes"
+          v-for="note in notesStore.filteredNotes"
           :key="note.id"
           :class="[
-            'bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer border border-gray-200 dark:border-gray-700',
-            isGridView ? 'p-4' : 'p-4 sm:p-6',
+            'bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer border border-gray-200 dark:border-gray-700 relative',
+            notesStore.isGridView ? 'p-4' : 'p-4 sm:p-6',
+            note.color,
           ]"
+          @click="openNoteModal(note)"
         >
-          <!-- Note Header -->
-          <div class="flex items-start justify-between mb-3">
-            <div class="flex items-center space-x-2">
-              <div :class="['w-3 h-3 rounded-full', note.color]" />
-              <span class="text-xs text-gray-500 dark:text-gray-400 font-medium">{{
-                note.category
-              }}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <button v-if="note.isPinned" class="text-yellow-500 hover:text-yellow-600">
-                <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path
-                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
-                  />
-                </svg>
-              </button>
-              <button class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </button>
-            </div>
-          </div>
-
           <!-- Note Content -->
-          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
             {{ note.title }}
           </h3>
-          <p
-            :class="[
-              'text-gray-600 dark:text-gray-400 text-sm mb-4',
-              isGridView ? 'line-clamp-3' : 'line-clamp-2',
-            ]"
-          >
+          <p class="text-gray-600 dark:text-gray-400 text-sm mb-4">
             {{ note.content }}
           </p>
-
-          <!-- Note Footer -->
-          <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-            <span>Updated {{ note.updated }}</span>
-            <div class="flex items-center space-x-2">
-              <button class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                  />
-                </svg>
-              </button>
-              <button class="hover:text-red-600 dark:hover:text-red-400 transition-colors">
-                <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                  />
-                </svg>
-              </button>
-            </div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">
+            <span>{{ note.category }}</span> • <span>{{ formatDate(note.updated) }}</span>
           </div>
         </div>
       </div>
 
       <!-- Empty State -->
-      <div v-if="notes.length === 0" class="text-center py-12">
+      <div v-if="notesStore.filteredNotes.length === 0" class="text-center py-12">
         <svg
           class="mx-auto h-12 w-12 text-gray-400"
           fill="none"
@@ -339,12 +221,17 @@
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-white">No notes yet</h3>
+        <h3 class="mt-2 text-lg font-medium text-gray-900 dark:text-white">No notes found</h3>
         <p class="mt-1 text-gray-500 dark:text-gray-400">
-          Get started by creating your first note.
+          {{
+            notesStore.searchQuery || notesStore.selectedCategory
+              ? "Try adjusting your search or filters"
+              : "Get started by creating your first note"
+          }}
         </p>
         <div class="mt-6">
           <button
+            @click="openNoteModal()"
             class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -360,8 +247,92 @@
         </div>
       </div>
     </main>
+
+    <!-- Modals -->
+    <NoteModal
+      :is-open="isNoteModalOpen"
+      :note="editingNote"
+      @close="closeNoteModal"
+      @save="handleSaveNote"
+      @update="handleUpdateNote"
+    />
+
+    <DeleteModal
+      :is-open="isDeleteModalOpen"
+      :note-title="deletingNote?.title || ''"
+      @close="closeDeleteModal"
+      @confirm="confirmDelete"
+    />
   </div>
 </template>
+
+<script setup lang="ts">
+  import { useNotesStore } from "~/stores/notes";
+  import type { Note } from "~/stores/notes";
+  import NoteModal from "~/components/NoteModal.vue";
+  import DeleteModal from "~/components/DeleteModal.vue";
+
+  definePageMeta({
+    layout: "default",
+  });
+
+  // Store
+  const notesStore = useNotesStore();
+
+  // Modal states
+  const isNoteModalOpen = ref(false);
+  const isDeleteModalOpen = ref(false);
+  const editingNote = ref<Note | null>(null);
+  const deletingNote = ref<Note | null>(null);
+
+  // Modal handlers
+  const openNoteModal = (note?: Note) => {
+    editingNote.value = note || null;
+    isNoteModalOpen.value = true;
+  };
+
+  const closeNoteModal = () => {
+    isNoteModalOpen.value = false;
+    editingNote.value = null;
+  };
+
+  const closeDeleteModal = () => {
+    isDeleteModalOpen.value = false;
+    deletingNote.value = null;
+  };
+
+  const confirmDelete = () => {
+    if (deletingNote.value) {
+      notesStore.deleteNote(deletingNote.value.id);
+      closeDeleteModal();
+    }
+  };
+
+  const handleSaveNote = (noteData: Omit<Note, "id" | "createdAt" | "updated">) => {
+    notesStore.addNote(noteData);
+    closeNoteModal();
+  };
+
+  const handleUpdateNote = (id: number, updates: Partial<Note>) => {
+    notesStore.updateNote(id, updates);
+    closeNoteModal();
+  };
+
+  // Dark mode toggle
+  const toggleDarkMode = () => {
+    document.documentElement.classList.toggle("dark");
+  };
+
+  // Date formatting utility
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+</script>
 
 <style scoped>
   .line-clamp-2 {
@@ -369,6 +340,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    line-clamp: 2;
   }
 
   .line-clamp-3 {
@@ -376,5 +348,6 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    line-clamp: 3;
   }
 </style>
