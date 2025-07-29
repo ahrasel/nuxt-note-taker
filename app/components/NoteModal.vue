@@ -21,6 +21,8 @@
     content: "",
     category: "Personal",
     isPinned: false,
+    isCompleted: false,
+    isArchived: false,
   });
 
   const categories = ["Work", "Personal", "Ideas", "Important"];
@@ -31,6 +33,8 @@
       content: "",
       category: "Personal",
       isPinned: false,
+      isCompleted: false,
+      isArchived: false,
     };
   };
 
@@ -44,6 +48,8 @@
           content: note.content,
           category: note.category,
           isPinned: note.isPinned,
+          isCompleted: note.isCompleted,
+          isArchived: note.isArchived,
         };
       } else {
         resetForm();

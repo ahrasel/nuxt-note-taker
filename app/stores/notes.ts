@@ -8,6 +8,8 @@ export interface Note {
   color: string;
   updated: string;
   isPinned: boolean;
+  isCompleted: boolean;
+  isArchived: boolean;
   createdAt: string;
 }
 
@@ -22,6 +24,8 @@ export const useNotesStore = defineStore("notes", () => {
       color: "bg-blue-100 dark:bg-blue-900/20",
       updated: "2 hours ago",
       isPinned: true,
+      isCompleted: false,
+      isArchived: false,
       createdAt: new Date().toISOString(),
     },
     {
@@ -32,6 +36,8 @@ export const useNotesStore = defineStore("notes", () => {
       color: "bg-green-100 dark:bg-green-900/20",
       updated: "1 day ago",
       isPinned: false,
+      isCompleted: false,
+      isArchived: false,
       createdAt: new Date().toISOString(),
     },
     {
@@ -42,6 +48,8 @@ export const useNotesStore = defineStore("notes", () => {
       color: "bg-yellow-100 dark:bg-yellow-900/20",
       updated: "3 days ago",
       isPinned: true,
+      isCompleted: false,
+      isArchived: false,
       createdAt: new Date().toISOString(),
     },
     {
@@ -52,17 +60,30 @@ export const useNotesStore = defineStore("notes", () => {
       color: "bg-purple-100 dark:bg-purple-900/20",
       updated: "1 week ago",
       isPinned: false,
+      isCompleted: true,
+      isArchived: false,
       createdAt: new Date().toISOString(),
     },
   ]);
 
   const searchQuery = ref("");
   const selectedCategory = ref("");
+  const selectedView = ref("active"); // active, completed, archived, all
   const isGridView = ref(true);
 
   // Getters
   const filteredNotes = computed(() => {
     let filtered = notes.value;
+
+    // Filter by view type
+    if (selectedView.value === "active") {
+      filtered = filtered.filter((note) => !note.isCompleted && !note.isArchived);
+    } else if (selectedView.value === "completed") {
+      filtered = filtered.filter((note) => note.isCompleted && !note.isArchived);
+    } else if (selectedView.value === "archived") {
+      filtered = filtered.filter((note) => note.isArchived);
+    }
+    // "all" shows everything
 
     // Filter by category
     if (selectedCategory.value && selectedCategory.value !== "") {
@@ -111,6 +132,8 @@ export const useNotesStore = defineStore("notes", () => {
           category: updates.category ?? currentNote.category,
           color: updates.color ?? currentNote.color,
           isPinned: updates.isPinned ?? currentNote.isPinned,
+          isCompleted: updates.isCompleted ?? currentNote.isCompleted,
+          isArchived: updates.isArchived ?? currentNote.isArchived,
           createdAt: currentNote.createdAt,
           updated: new Date().toISOString(),
         };
@@ -148,6 +171,7 @@ export const useNotesStore = defineStore("notes", () => {
     notes,
     searchQuery,
     selectedCategory,
+    selectedView,
     isGridView,
     // Getters
     filteredNotes,
