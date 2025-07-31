@@ -14,6 +14,17 @@ export default defineNuxtConfig({
     "@vite-pwa/nuxt",
     "nuxt-typed-router",
   ],
+
+  runtimeConfig: {
+    // Private keys (only available on server-side)
+    jwtSecret: process.env.JWT_SECRET,
+    databaseUrl: process.env.DATABASE_URL,
+    // Public keys (exposed to client-side)
+    public: {
+      apiBase: "/api",
+    },
+  },
+
   app: {
     head: {
       title: "Nuxt Note Taker",

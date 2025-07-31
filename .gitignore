@@ -18,6 +18,16 @@ logs
 .fleet
 .idea
 
+# Environment files
+.env.local
+.env.production
+
+# Docker volumes
+mysql/data/
+
+# Prisma
+.env
+
 # Local env files
 .env
 .env.*

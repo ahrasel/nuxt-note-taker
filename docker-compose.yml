@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: nuxt-note-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: nuxt_notes
+      MYSQL_USER: nuxt_user
+      MYSQL_PASSWORD: nuxt_password
+    ports:
+      - "1432:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    networks:
+      - nuxt-network
+
+  # phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2
+    container_name: nuxt-note-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: nuxt_user
+      PMA_PASSWORD: nuxt_password
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "1433:80"
+    depends_on:
+      - mysql
+    networks:
+      - nuxt-network
+
+  # Nuxt Application
+  # nuxt-app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: nuxt-note-app
+  #   restart: always
+  #   environment:
+  #     - NODE_ENV=development
+  #     - DATABASE_URL=mysql://nuxt_user:nuxt_password@mysql:3306/nuxt_notes
+  #     - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+  #   ports:
+  #     - "3000:3000"
+  #   depends_on:
+  #     - mysql
+  #   volumes:
+  #     - .:/app
+  #     - /app/node_modules
+  #   networks:
+  #     - nuxt-network
+
+volumes:
+  mysql_data:
+
+networks:
+  nuxt-network:
+    driver: bridge
