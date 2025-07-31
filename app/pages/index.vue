@@ -45,12 +45,6 @@
         >
           Forgot your password?
         </NuxtLink>
-        <NuxtLink
-          :to="{ path: '/dashboard' }"
-          class="block text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 text-sm transition-colors duration-200"
-        >
-          Continue to Dashboard →
-        </NuxtLink>
       </div>
     </div>
   </div>
