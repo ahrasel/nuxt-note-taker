@@ -22,5 +22,29 @@
       "form": []
     },
     "tests": []
+  },
+  {
+    "_id": "731400d4-037f-45db-b765-069ffe2912b0",
+    "colId": "75b5532f-e5a2-4216-bebb-dc850333a777",
+    "containerId": "",
+    "name": "login",
+    "url": "http://localhost:3001/api/auth/login",
+    "method": "POST",
+    "sortNum": 20000,
+    "created": "2025-08-03T06:10:47.052Z",
+    "modified": "2025-08-03T06:11:39.956Z",
+    "headers": [
+      {
+        "name": "Accept",
+        "value": "application/json"
+      }
+    ],
+    "params": [],
+    "body": {
+      "type": "json",
+      "raw": "{\n  \"username\":\"ahr\",\n  \"password\":\"ahr\"\n}",
+      "form": []
+    },
+    "tests": []
   }
 ]

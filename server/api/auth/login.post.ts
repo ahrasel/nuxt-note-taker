@@ -12,6 +12,12 @@ export default defineEventHandler(async (event) => {
 
   try {
     const body = await readBody(event);
+    if (!body || typeof body !== "object") {
+      throw createError({
+        statusCode: 400,
+        statusMessage: "Invalid request body",
+      });
+    }
     const { username, password } = body;
 
     // Validate input
@@ -69,17 +75,10 @@ export default defineEventHandler(async (event) => {
       token,
     };
   } catch (error: unknown) {
-    // If it's already a createError, throw it as is
-    if (error && typeof error === "object" && "statusCode" in error) {
-      throw error;
-    }
-
-    // Log the error for debugging
-    console.error("Login error:", error);
-
-    throw createError({
-      statusCode: 500,
-      statusMessage: "Internal Server Error",
-    });
+    return {
+      success: false,
+      message: "Login failed",
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 });
