@@ -46,5 +46,24 @@
       "form": []
     },
     "tests": []
+  },
+  {
+    "_id": "e73ec251-7d68-4f3c-abe9-b3115949aeea",
+    "colId": "75b5532f-e5a2-4216-bebb-dc850333a777",
+    "containerId": "",
+    "name": "me",
+    "url": "http://localhost:3001/api/auth/me",
+    "method": "GET",
+    "sortNum": 30000,
+    "created": "2025-08-03T06:50:15.619Z",
+    "modified": "2025-08-03T06:53:16.240Z",
+    "headers": [
+      {
+        "name": "Accept",
+        "value": "application/json"
+      }
+    ],
+    "params": [],
+    "tests": []
   }
 ]
