@@ -55,13 +55,16 @@ export default defineEventHandler(async (event) => {
       user,
     };
   } catch (error: unknown) {
-    return {
-      success: false,
-      error: (error as Error).message || "Internal Server Error",
-      statusCode:
-        typeof error === "object" && error !== null && "statusCode" in error
-          ? (error as Error & { statusCode?: number }).statusCode || 500
-          : 500,
-    };
+    if (error && typeof error === "object" && "statusCode" in error) {
+      throw error;
+    }
+
+    // Log the error for debugging
+    console.error("Profile error:", error);
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: "Internal Server Error",
+    });
   }
 });
