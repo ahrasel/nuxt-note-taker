@@ -83,15 +83,129 @@
             </button>
 
             <!-- Profile -->
-            <div class="relative">
+            <div class="relative" :data-dropdown-open="isProfileDropdownOpen">
               <button
                 class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                @click.stop="toggleProfileDropdown"
               >
                 <div class="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                  <span class="text-white text-sm font-medium">U</span>
+                  <span v-if="!authLoading" class="text-white text-sm font-medium">
+                    {{ user?.username ? user.username.charAt(0).toUpperCase() : "U" }}
+                  </span>
+                  <svg
+                    v-else
+                    class="h-4 w-4 text-white animate-spin"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
                 </div>
-                <span class="hidden sm:block text-gray-700 dark:text-gray-300 text-sm">User</span>
+                <span class="hidden sm:block text-gray-700 dark:text-gray-300 text-sm">
+                  {{ authLoading ? "Loading..." : user?.username || "User" }}
+                </span>
+                <svg
+                  class="h-4 w-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
               </button>
+
+              <!-- Profile Dropdown -->
+              <div
+                v-if="isProfileDropdownOpen"
+                class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 z-20"
+                @click.stop
+              >
+                <div class="py-2">
+                  <!-- User Info -->
+                  <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center space-x-3">
+                      <div
+                        class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center"
+                      >
+                        <span class="text-white font-medium">
+                          {{ user?.username ? user.username.charAt(0).toUpperCase() : "U" }}
+                        </span>
+                      </div>
+                      <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {{ user?.username || "User" }}
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          {{ user?.email || "user@example.com" }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Menu Items -->
+                  <div class="py-1">
+                    <button
+                      class="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+                      @click="handleProfile"
+                    >
+                      <svg
+                        class="h-4 w-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                      Profile Settings
+                    </button>
+
+                    <div class="border-t border-gray-200 dark:border-gray-600 my-1" />
+
+                    <button
+                      :disabled="authLoading"
+                      class="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      @click="handleLogout"
+                    >
+                      <svg
+                        class="h-4 w-4 mr-3"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                        />
+                      </svg>
+                      {{ authLoading ? "Signing out..." : "Sign out" }}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -246,6 +360,7 @@
             <div
               v-if="openDropdownId === note.id"
               class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg border border-gray-200 dark:border-gray-600 z-20"
+              @click.stop
             >
               <div class="py-1">
                 <button
@@ -437,12 +552,21 @@
       @close="closeDeleteModal"
       @confirm="confirmDelete"
     />
+
+    <!-- Toast Notification -->
+    <div
+      v-if="showToast"
+      class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300"
+    >
+      {{ toastMessage }}
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
   import { useNotesStore } from "~/stores/notes";
   import type { Note } from "~/stores/notes";
+  import { useAuth } from "~/composables/useAuth";
   import NoteModal from "~/components/NoteModal.vue";
   import DeleteModal from "~/components/DeleteModal.vue";
 
@@ -453,12 +577,20 @@
   // Store
   const notesStore = useNotesStore();
 
+  // Auth
+  const { user, logout, initializeAuth, isLoading: authLoading } = useAuth();
+
   // Modal states
   const isNoteModalOpen = ref(false);
   const isDeleteModalOpen = ref(false);
   const editingNote = ref<Note | null>(null);
   const deletingNote = ref<Note | null>(null);
   const openDropdownId = ref<number | null>(null);
+  const isProfileDropdownOpen = ref(false);
+
+  // Toast notification
+  const showToast = ref(false);
+  const toastMessage = ref("");
 
   // Modal handlers
   const openNoteModal = (note?: Note) => {
@@ -527,6 +659,40 @@
     openDropdownId.value = null;
   };
 
+  // Profile dropdown handlers
+  const toggleProfileDropdown = () => {
+    console.log("Toggling profile dropdown, current state:", isProfileDropdownOpen.value);
+    isProfileDropdownOpen.value = !isProfileDropdownOpen.value;
+    console.log("New state:", isProfileDropdownOpen.value);
+  };
+
+  const handleProfile = () => {
+    // TODO: Navigate to profile settings page
+    console.log("Navigate to profile settings");
+    isProfileDropdownOpen.value = false;
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      isProfileDropdownOpen.value = false;
+      showToastMessage("Successfully signed out");
+    } catch (error) {
+      console.error("Logout failed:", error);
+      showToastMessage("Failed to sign out. Please try again.", "error");
+    }
+  };
+
+  // Toast notification helper
+  const showToastMessage = (message: string, _type: "success" | "error" = "success") => {
+    toastMessage.value = message;
+    showToast.value = true;
+
+    setTimeout(() => {
+      showToast.value = false;
+    }, 3000);
+  };
+
   // Dark mode toggle
   const toggleDarkMode = () => {
     document.documentElement.classList.toggle("dark");
@@ -544,8 +710,12 @@
 
   // Close dropdown when clicking outside
   onMounted(() => {
+    // Initialize auth on component mount
+    initializeAuth();
+
     document.addEventListener("click", () => {
       openDropdownId.value = null;
+      isProfileDropdownOpen.value = false;
     });
   });
 </script>
