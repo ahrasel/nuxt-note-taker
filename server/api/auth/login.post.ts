@@ -77,8 +77,7 @@ export default defineEventHandler(async (event) => {
   } catch (error: unknown) {
     return {
       success: false,
-      message: "Login failed",
-      error: error instanceof Error ? error.message : "Unknown error",
+      message: error instanceof Error ? error.message : "Unknown error",
     };
   }
 });

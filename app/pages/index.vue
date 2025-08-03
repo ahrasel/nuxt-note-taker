@@ -43,6 +43,8 @@
       if (data.success) {
         // Redirect to dashboard after successful login
         await navigateTo("/dashboard");
+      } else {
+        error.value = data.message || "Login failed. Please try again.";
       }
     } catch (err: unknown) {
       if (err && typeof err === "object" && "data" in err) {
@@ -67,11 +69,6 @@
         Login to Your Account
       </h2>
       <form class="space-y-5" @submit.prevent="handleLogin">
-        <!-- Error message -->
-        <div v-if="error" class="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-          {{ error }}
-        </div>
-
         <div>
           <label class="block text-gray-700 dark:text-gray-300 mb-2" for="username">Username</label>
           <input
@@ -93,6 +90,10 @@
             class="w-full px-4 py-2 border border-gray-300 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             placeholder="••••••••"
           />
+        </div>
+        <!-- Error message -->
+        <div v-if="error" class="p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {{ error }}
         </div>
         <button
           type="submit"
