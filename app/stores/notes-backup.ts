@@ -153,6 +153,77 @@ export const useNotesStore = defineStore("notes", () => {
     }
   };
 
+  const addNote = async (noteData: Omit<Note, "id" | "userId" | "createdAt" | "updatedAt">) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await $fetch<{ success: boolean; data: Note }>("/api/notes", {
+        method: "POST",
+        body: noteData,
+        server: false,
+      });
+
+      notes.value.unshift(response.data);
+      return response.data;
+    } catch (err) {
+      console.error("Failed to create note:", err);
+      error.value = "Failed to create note";
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const updateNote = async (id: string, updates: Partial<Note>) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await $fetch<{ success: boolean; data: Note }>(`/api/notes/${id}`, {
+        method: "PUT",
+        body: updates,
+        server: false,
+      });
+
+      const index = notes.value.findIndex((note) => note.id === id);
+      if (index !== -1) {
+        notes.value[index] = response.data;
+      }
+
+      return response.data;
+    } catch (err) {
+      console.error("Failed to update note:", err);
+      error.value = "Failed to update note";
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const deleteNote = async (id: string) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await $fetch(`/api/notes/${id}`, {
+        method: "DELETE",
+        server: false, // Force client-side execution
+      });
+
+      const index = notes.value.findIndex((note) => note.id === id);
+      if (index !== -1) {
+        notes.value.splice(index, 1);
+      }
+    } catch (err) {
+      console.error("Failed to delete note:", err);
+      error.value = "Failed to delete note";
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
   const togglePin = async (id: string) => {
     const note = notes.value.find((note) => note.id === id);
     if (note) {

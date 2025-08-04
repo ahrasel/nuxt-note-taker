@@ -9,7 +9,7 @@
   interface Emits {
     (e: "close"): void;
     (e: "save", note: Omit<Note, "id" | "userId" | "createdAt" | "updatedAt">): void;
-    (e: "update", id: number, updates: Partial<Note>): void;
+    (e: "update", id: string, updates: Partial<Note>): void;
   }
 
   const props = defineProps<Props>();

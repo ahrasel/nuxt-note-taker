@@ -160,7 +160,7 @@
     }
   };
 
-  const handleUpdateNote = async (id: number, updates: Partial<Note>) => {
+  const handleUpdateNote = async (id: string, updates: Partial<Note>) => {
     try {
       const { useNotesStore } = await import("~/stores/notes");
       const notesStore = useNotesStore();

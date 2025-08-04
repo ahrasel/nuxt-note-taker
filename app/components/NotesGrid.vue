@@ -40,9 +40,9 @@
   const _emit = defineEmits<Emits>();
 
   // Dropdown state
-  const openDropdownId = ref<number | null>(null);
+  const openDropdownId = ref<string | null>(null);
 
-  const handleToggleDropdown = (noteId: number) => {
+  const handleToggleDropdown = (noteId: string) => {
     openDropdownId.value = openDropdownId.value === noteId ? null : noteId;
   };
 

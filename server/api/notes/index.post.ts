@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
       content,
       category = "Personal",
       color = "bg-gray-100 dark:bg-gray-900/20",
+      pinned = false,
     } = body;
 
     // Validate required fields
@@ -36,6 +37,7 @@ export default defineEventHandler(async (event) => {
         content: content.trim(),
         category: category.trim(),
         color,
+        pinned,
         userId: user.userId,
       },
     });

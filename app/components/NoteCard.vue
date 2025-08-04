@@ -171,7 +171,7 @@
   defineProps<Props>();
 
   defineEmits<{
-    toggleDropdown: [id: number];
+    toggleDropdown: [id: string];
     edit: [note: Note];
     pin: [note: Note];
     complete: [note: Note];
