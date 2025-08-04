@@ -18,12 +18,12 @@ export default defineEventHandler(async (event) => {
 
     // Build where clause
     const where: {
-      userId: number;
+      userId: string;
       completed?: boolean;
       archived?: boolean;
       OR?: Array<
-        | { title?: { contains: string; mode: string } }
-        | { content?: { contains: string; mode: string } }
+        | { title?: { contains: string; mode: "insensitive" } }
+        | { content?: { contains: string; mode: "insensitive" } }
       >;
     } = {
       userId: user.userId,

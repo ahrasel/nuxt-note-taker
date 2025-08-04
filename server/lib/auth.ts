@@ -5,7 +5,7 @@ import type { H3Event } from "h3";
 const JWT_SECRET = process.env.JWT_SECRET || "fallback-secret-key";
 
 export interface JWTPayload {
-  userId: number;
+  userId: string;
   username: string;
   iat?: number;
   exp?: number;
@@ -20,7 +20,7 @@ export const comparePassword = async (password: string, hash: string): Promise<b
   return bcrypt.compare(password, hash);
 };
 
-export const signToken = (payload: { userId: number; username: string }): string => {
+export const signToken = (payload: { userId: string; username: string }): string => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: "7d" });
 };
 

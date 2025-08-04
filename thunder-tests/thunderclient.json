@@ -4,11 +4,11 @@
     "colId": "75b5532f-e5a2-4216-bebb-dc850333a777",
     "containerId": "",
     "name": "register",
-    "url": "http://localhost:3001/api/auth/register",
+    "url": "http://localhost:3000/api/auth/register",
     "method": "POST",
     "sortNum": 10000,
     "created": "2025-07-31T12:14:26.494Z",
-    "modified": "2025-08-03T05:59:16.901Z",
+    "modified": "2025-08-04T09:06:32.245Z",
     "headers": [
       {
         "name": "Accept",

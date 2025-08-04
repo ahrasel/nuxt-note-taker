@@ -21,18 +21,18 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    const id = parseInt(noteId);
-    if (isNaN(id)) {
+    // MongoDB ObjectId validation (basic check for 24 char hex string)
+    if (!/^[0-9a-fA-F]{24}$/.test(noteId)) {
       throw createError({
         statusCode: 400,
-        statusMessage: "Invalid note ID",
+        statusMessage: "Invalid note ID format",
       });
     }
 
     // Check if note exists and belongs to user
     const existingNote = await prisma.note.findFirst({
       where: {
-        id,
+        id: noteId,
         userId: user.userId,
       },
     });
@@ -46,7 +46,7 @@ export default defineEventHandler(async (event) => {
 
     // Delete note from database
     await prisma.note.delete({
-      where: { id },
+      where: { id: noteId },
     });
 
     return {

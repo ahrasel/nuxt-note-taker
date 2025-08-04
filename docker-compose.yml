@@ -1,39 +1,34 @@
-version: '3.8'
-
 services:
-  # MySQL Database
-  mysql:
-    image: mysql:8.0
-    container_name: nuxt-note-mysql
+  # MongoDB Database
+  mongodb:
+    image: mongo:7.0
+    container_name: nuxt-note-mongodb
     restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: nuxt_notes
-      MYSQL_USER: nuxt_user
-      MYSQL_PASSWORD: nuxt_password
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     ports:
-      - "1432:3306"
+      - "27017:27017"
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql/init:/docker-entrypoint-initdb.d
+      - mongodb_data:/data/db
+      - ./mongodb/init:/docker-entrypoint-initdb.d
     networks:
       - nuxt-network
+    healthcheck:
+      test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongosh --port 27017 --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
 
-  # phpMyAdmin
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin:5.2
-    container_name: nuxt-note-phpmyadmin
+  # Mongo Express (MongoDB Admin Interface)
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: nuxt-note-mongo-express
     restart: always
     environment:
-      PMA_HOST: mysql
-      PMA_PORT: 3306
-      PMA_USER: nuxt_user
-      PMA_PASSWORD: nuxt_password
-      MYSQL_ROOT_PASSWORD: rootpassword
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017/?replicaSet=rs0
+      ME_CONFIG_BASICAUTH: false
     ports:
-      - "1433:80"
+      - "1433:8081"
     depends_on:
-      - mysql
+      - mongodb
     networks:
       - nuxt-network
 
@@ -46,12 +41,12 @@ services:
   #   restart: always
   #   environment:
   #     - NODE_ENV=development
-  #     - DATABASE_URL=mysql://nuxt_user:nuxt_password@mysql:3306/nuxt_notes
+  #     - DATABASE_URL=mongodb://root:rootpassword@mongodb:27017/nuxt_notes?authSource=admin
   #     - JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
   #   ports:
   #     - "3000:3000"
   #   depends_on:
-  #     - mysql
+  #     - mongodb
   #   volumes:
   #     - .:/app
   #     - /app/node_modules
@@ -59,7 +54,7 @@ services:
   #     - nuxt-network
 
 volumes:
-  mysql_data:
+  mongodb_data:
 
 networks:
   nuxt-network:
