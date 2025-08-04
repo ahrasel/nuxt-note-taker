@@ -48,6 +48,23 @@ export default defineEventHandler(async (event) => {
     };
   } catch (error: unknown) {
     console.error("Error creating note:", error);
+
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes("connection")) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: "Database connection failed",
+        });
+      }
+      if (error.message.includes("validation")) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Invalid data provided",
+        });
+      }
+    }
+
     throw createError({
       statusCode: 500,
       statusMessage: "Failed to create note",

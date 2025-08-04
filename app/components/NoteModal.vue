@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import type { Note } from "~/stores/notes";
+  import { useNotesStore } from "~/stores/notes";
 
   interface Props {
     isOpen: boolean;
@@ -15,6 +16,9 @@
   const props = defineProps<Props>();
   const emit = defineEmits<Emits>();
 
+  // Get notes store for categories
+  const notesStore = useNotesStore();
+
   // Form data
   const formData = ref({
     title: "",
@@ -26,7 +30,7 @@
     archived: false,
   });
 
-  const categories = ["Work", "Personal", "Ideas", "Important"];
+  const categories = computed(() => notesStore.categories);
 
   const resetForm = () => {
     formData.value = {
@@ -74,9 +78,6 @@
 
   const handleSave = async () => {
     if (!formData.value.title.trim()) return;
-
-    const { useNotesStore } = await import("~/stores/notes");
-    const notesStore = useNotesStore();
 
     const noteData = {
       ...formData.value,

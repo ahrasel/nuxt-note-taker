@@ -19,6 +19,7 @@ export const useNotesStore = defineStore("notes", () => {
   const notes = ref<Note[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
+  const availableCategories = ref<string[]>(["Work", "Personal", "Ideas", "Important"]);
 
   const searchQuery = ref("");
   const selectedCategory = ref("");
@@ -59,11 +60,20 @@ export const useNotesStore = defineStore("notes", () => {
   });
 
   const categories = computed(() => {
-    const uniqueCats = [...new Set(notes.value.map((note) => note.category))];
-    return uniqueCats.filter(Boolean); // Remove empty strings
+    return availableCategories.value;
   });
 
   // Actions
+  const fetchCategories = async () => {
+    try {
+      const response = await $fetch<{ success: boolean; data: string[] }>("/api/categories");
+      availableCategories.value = response.data;
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+      // Keep default categories if API fails
+    }
+  };
+
   const fetchNotes = async (params?: { search?: string; status?: string }) => {
     loading.value = true;
     error.value = null;
@@ -77,6 +87,9 @@ export const useNotesStore = defineStore("notes", () => {
         `/api/notes?${query.toString()}`
       );
       notes.value = response.data;
+
+      // Also fetch categories when fetching notes
+      await fetchCategories();
     } catch (err) {
       console.error("Failed to fetch notes:", err);
       error.value = "Failed to fetch notes";
@@ -183,10 +196,12 @@ export const useNotesStore = defineStore("notes", () => {
     selectedCategory,
     selectedView,
     isGridView,
+    availableCategories,
     // Getters
     filteredNotes,
     categories,
     // Actions
+    fetchCategories,
     fetchNotes,
     addNote,
     updateNote,
