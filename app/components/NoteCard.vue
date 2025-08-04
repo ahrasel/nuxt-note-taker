@@ -4,7 +4,7 @@
       'bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 border border-gray-200 dark:border-gray-700 relative',
       isGridView ? 'p-4' : 'p-4 sm:p-6',
       note.color,
-      { 'opacity-60': note.isCompleted },
+      { 'opacity-60': note.completed },
     ]"
   >
     <!-- Dropdown Menu -->
@@ -54,7 +54,7 @@
                 d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
               />
             </svg>
-            {{ note.isPinned ? "Unpin" : "Pin" }}
+            {{ note.pinned ? "Unpin" : "Pin" }}
           </button>
 
           <button
@@ -69,7 +69,7 @@
                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            {{ note.isCompleted ? "Mark Incomplete" : "Mark Complete" }}
+            {{ note.completed ? "Mark Incomplete" : "Mark Complete" }}
           </button>
 
           <button
@@ -84,7 +84,7 @@
                 d="M5 8l6 6 6-6"
               />
             </svg>
-            {{ note.isArchived ? "Unarchive" : "Archive" }}
+            {{ note.archived ? "Unarchive" : "Archive" }}
           </button>
 
           <div class="border-t border-gray-200 dark:border-gray-600" />
@@ -110,7 +110,7 @@
     <!-- Note Content -->
     <div class="cursor-pointer pr-8" @click="$emit('view', note)">
       <!-- Pin indicator -->
-      <div v-if="note.isPinned" class="absolute top-2 left-2">
+      <div v-if="note.pinned" class="absolute top-2 left-2">
         <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
           <path d="M5 5a2 2 0 012-2h6a2 2 0 012 2v16l-5-3-5 3V5z" />
         </svg>
@@ -119,7 +119,7 @@
       <!-- Status indicators -->
       <div class="flex items-center gap-2 mb-2">
         <span
-          v-if="note.isCompleted"
+          v-if="note.completed"
           class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400"
         >
           <svg class="h-3 w-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -133,7 +133,7 @@
         </span>
 
         <span
-          v-if="note.isArchived"
+          v-if="note.archived"
           class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
         >
           Archived
@@ -142,35 +142,25 @@
 
       <h3
         class="text-lg font-semibold text-gray-900 dark:text-white mb-2"
-        :class="{ 'line-through': note.isCompleted }"
+        :class="{ 'line-through': note.completed }"
       >
         {{ note.title }}
       </h3>
       <p
         class="text-gray-600 dark:text-gray-400 text-sm mb-4"
-        :class="{ 'line-through': note.isCompleted }"
+        :class="{ 'line-through': note.completed }"
       >
         {{ note.content }}
       </p>
       <div class="text-xs text-gray-500 dark:text-gray-400">
-        <span>{{ note.category }}</span> • <span>{{ formatDate(note.updated) }}</span>
+        <span>{{ note.category }}</span> • <span>{{ formatDate(note.updatedAt) }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-  interface Note {
-    id: number;
-    title: string;
-    content: string;
-    category: string;
-    color?: string;
-    isPinned: boolean;
-    isCompleted: boolean;
-    isArchived: boolean;
-    updated: string;
-  }
+  import type { Note } from "~/stores/notes";
 
   interface Props {
     note: Note;

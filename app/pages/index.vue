@@ -1,6 +1,10 @@
 <script setup lang="ts">
   import { ref } from "vue";
 
+  definePageMeta({
+    layout: "auth",
+  });
+
   interface LoginForm {
     username: string;
     password: string;

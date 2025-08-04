@@ -26,6 +26,9 @@ model Note {
     id        Int      @id @default(autoincrement())
     title     String
     content   String   @db.Text
+    category  String   @default("Personal")
+    color     String   @default("bg-gray-100 dark:bg-gray-900/20")
+    pinned    Boolean  @default(false)
     completed Boolean  @default(false)
     archived  Boolean  @default(false)
     userId    Int

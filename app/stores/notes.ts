@@ -6,65 +6,19 @@ export interface Note {
   content: string;
   category: string;
   color: string;
-  updated: string;
-  isPinned: boolean;
-  isCompleted: boolean;
-  isArchived: boolean;
+  pinned: boolean;
+  completed: boolean;
+  archived: boolean;
+  userId: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 export const useNotesStore = defineStore("notes", () => {
   // State
-  const notes = ref<Note[]>([
-    {
-      id: 1,
-      title: "Project Ideas",
-      content: "List of upcoming project ideas and concepts to explore...",
-      category: "Work",
-      color: "bg-blue-100 dark:bg-blue-900/20",
-      updated: "2 hours ago",
-      isPinned: true,
-      isCompleted: false,
-      isArchived: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 2,
-      title: "Meeting Notes",
-      content: "Important points discussed in today's team meeting...",
-      category: "Work",
-      color: "bg-green-100 dark:bg-green-900/20",
-      updated: "1 day ago",
-      isPinned: false,
-      isCompleted: false,
-      isArchived: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 3,
-      title: "Shopping List",
-      content: "Groceries and items to buy this weekend...",
-      category: "Personal",
-      color: "bg-yellow-100 dark:bg-yellow-900/20",
-      updated: "3 days ago",
-      isPinned: true,
-      isCompleted: false,
-      isArchived: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 4,
-      title: "Book Recommendations",
-      content: "List of books recommended by friends and colleagues...",
-      category: "Personal",
-      color: "bg-purple-100 dark:bg-purple-900/20",
-      updated: "1 week ago",
-      isPinned: false,
-      isCompleted: true,
-      isArchived: false,
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const notes = ref<Note[]>([]);
+  const loading = ref(false);
+  const error = ref<string | null>(null);
 
   const searchQuery = ref("");
   const selectedCategory = ref("");
@@ -77,11 +31,11 @@ export const useNotesStore = defineStore("notes", () => {
 
     // Filter by view type
     if (selectedView.value === "active") {
-      filtered = filtered.filter((note) => !note.isCompleted && !note.isArchived);
+      filtered = filtered.filter((note) => !note.completed && !note.archived);
     } else if (selectedView.value === "completed") {
-      filtered = filtered.filter((note) => note.isCompleted && !note.isArchived);
+      filtered = filtered.filter((note) => note.completed && !note.archived);
     } else if (selectedView.value === "archived") {
-      filtered = filtered.filter((note) => note.isArchived);
+      filtered = filtered.filter((note) => note.archived);
     }
     // "all" shows everything
 
@@ -106,53 +60,103 @@ export const useNotesStore = defineStore("notes", () => {
 
   const categories = computed(() => {
     const uniqueCats = [...new Set(notes.value.map((note) => note.category))];
-    return uniqueCats;
+    return uniqueCats.filter(Boolean); // Remove empty strings
   });
 
   // Actions
-  const addNote = (noteData: Omit<Note, "id" | "createdAt" | "updated">) => {
-    const newNote: Note = {
-      ...noteData,
-      id: Math.max(...notes.value.map((n) => n.id), 0) + 1,
-      createdAt: new Date().toISOString(),
-      updated: "just now",
-    };
-    notes.value.unshift(newNote);
+  const fetchNotes = async (params?: { search?: string; status?: string }) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const query = new URLSearchParams();
+      if (params?.search) query.append("search", params.search);
+      if (params?.status) query.append("status", params.status);
+
+      const response = await $fetch<{ success: boolean; data: Note[] }>(
+        `/api/notes?${query.toString()}`
+      );
+      notes.value = response.data;
+    } catch (err) {
+      console.error("Failed to fetch notes:", err);
+      error.value = "Failed to fetch notes";
+    } finally {
+      loading.value = false;
+    }
   };
 
-  const updateNote = (id: number, updates: Partial<Note>) => {
-    const index = notes.value.findIndex((note) => note.id === id);
-    if (index !== -1) {
-      const currentNote = notes.value[index];
-      if (currentNote) {
-        notes.value[index] = {
-          id: currentNote.id,
-          title: updates.title ?? currentNote.title,
-          content: updates.content ?? currentNote.content,
-          category: updates.category ?? currentNote.category,
-          color: updates.color ?? currentNote.color,
-          isPinned: updates.isPinned ?? currentNote.isPinned,
-          isCompleted: updates.isCompleted ?? currentNote.isCompleted,
-          isArchived: updates.isArchived ?? currentNote.isArchived,
-          createdAt: currentNote.createdAt,
-          updated: new Date().toISOString(),
-        };
+  const addNote = async (noteData: Omit<Note, "id" | "userId" | "createdAt" | "updatedAt">) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await $fetch<{ success: boolean; data: Note }>("/api/notes", {
+        method: "POST",
+        body: noteData,
+      });
+
+      notes.value.unshift(response.data);
+      return response.data;
+    } catch (err) {
+      console.error("Failed to create note:", err);
+      error.value = "Failed to create note";
+      throw err;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const updateNote = async (id: number, updates: Partial<Note>) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      const response = await $fetch<{ success: boolean; data: Note }>(`/api/notes/${id}`, {
+        method: "PUT",
+        body: updates,
+      });
+
+      const index = notes.value.findIndex((note) => note.id === id);
+      if (index !== -1) {
+        notes.value[index] = response.data;
       }
+
+      return response.data;
+    } catch (err) {
+      console.error("Failed to update note:", err);
+      error.value = "Failed to update note";
+      throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const deleteNote = (id: number) => {
-    const index = notes.value.findIndex((note) => note.id === id);
-    if (index !== -1) {
-      notes.value.splice(index, 1);
+  const deleteNote = async (id: number) => {
+    loading.value = true;
+    error.value = null;
+
+    try {
+      await $fetch(`/api/notes/${id}`, {
+        method: "DELETE",
+      });
+
+      const index = notes.value.findIndex((note) => note.id === id);
+      if (index !== -1) {
+        notes.value.splice(index, 1);
+      }
+    } catch (err) {
+      console.error("Failed to delete note:", err);
+      error.value = "Failed to delete note";
+      throw err;
+    } finally {
+      loading.value = false;
     }
   };
 
-  const togglePin = (id: number) => {
+  const togglePin = async (id: number) => {
     const note = notes.value.find((note) => note.id === id);
     if (note) {
-      note.isPinned = !note.isPinned;
-      note.updated = "just now";
+      await updateNote(id, { pinned: !note.pinned });
     }
   };
 
@@ -166,9 +170,15 @@ export const useNotesStore = defineStore("notes", () => {
     return colors[category as keyof typeof colors] || "bg-gray-100 dark:bg-gray-900/20";
   };
 
+  const clearError = () => {
+    error.value = null;
+  };
+
   return {
     // State
     notes,
+    loading,
+    error,
     searchQuery,
     selectedCategory,
     selectedView,
@@ -177,10 +187,12 @@ export const useNotesStore = defineStore("notes", () => {
     filteredNotes,
     categories,
     // Actions
+    fetchNotes,
     addNote,
     updateNote,
     deleteNote,
     togglePin,
     getCategoryColor,
+    clearError,
   };
 });
