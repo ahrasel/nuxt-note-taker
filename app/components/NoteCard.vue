@@ -7,9 +7,47 @@
       { 'opacity-60': note.completed },
     ]"
   >
-    <!-- Dropdown Menu -->
-    <div class="absolute top-3 right-3">
+    <!-- Action buttons -->
+    <div class="absolute top-3 right-3 flex items-center gap-1">
+      <!-- Copy Button -->
       <button
+        title="Copy content"
+        class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        @click.stop="copyNoteText"
+      >
+        <svg
+          v-if="!justCopied"
+          class="h-4 w-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+          />
+        </svg>
+        <svg
+          v-else
+          class="h-4 w-4 text-green-500"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 13l4 4L19 7"
+          />
+        </svg>
+      </button>
+
+      <!-- Dropdown Menu Button -->
+      <button
+        title="More options"
         class="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
         @click.stop="$emit('toggleDropdown', note.id)"
       >
@@ -108,7 +146,7 @@
     </div>
 
     <!-- Note Content -->
-    <div class="cursor-pointer pr-8" @click="$emit('view', note)">
+    <div class="cursor-pointer pr-16" @click="$emit('view', note)">
       <!-- Pin indicator -->
       <div v-if="note.pinned" class="absolute top-2 left-2">
         <svg class="h-4 w-4 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -156,6 +194,23 @@
         <span>{{ note.category }}</span> • <span>{{ formatDate(note.updatedAt) }}</span>
       </div>
     </div>
+
+    <!-- Copy Success Toast -->
+    <div
+      v-if="showCopyToast"
+      class="absolute bottom-2 left-2 bg-green-500 text-white px-3 py-1 rounded-md shadow-lg z-30 transition-all duration-300 text-xs"
+    >
+      <div class="flex items-center">
+        <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            fill-rule="evenodd"
+            d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+            clip-rule="evenodd"
+          />
+        </svg>
+        Copied!
+      </div>
+    </div>
   </div>
 </template>
 
@@ -168,7 +223,7 @@
     isDropdownOpen: boolean;
   }
 
-  defineProps<Props>();
+  const props = defineProps<Props>();
 
   defineEmits<{
     toggleDropdown: [id: string];
@@ -179,6 +234,56 @@
     delete: [note: Note];
     view: [note: Note];
   }>();
+
+  // Reactive state for copy functionality
+  const justCopied = ref(false);
+  const showCopyToast = ref(false);
+
+  // Copy note text to clipboard
+  const copyNoteText = async () => {
+    try {
+      const textToCopy = props.note.content;
+      await navigator.clipboard.writeText(textToCopy);
+
+      // Show visual feedback
+      justCopied.value = true;
+      showCopyToast.value = true;
+
+      // Reset copy icon after 2 seconds
+      setTimeout(() => {
+        justCopied.value = false;
+      }, 2000);
+
+      // Hide toast after 1.5 seconds
+      setTimeout(() => {
+        showCopyToast.value = false;
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to copy text:", error);
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = props.note.content;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+
+        justCopied.value = true;
+        showCopyToast.value = true;
+
+        setTimeout(() => {
+          justCopied.value = false;
+        }, 2000);
+
+        setTimeout(() => {
+          showCopyToast.value = false;
+        }, 1500);
+      } catch (fallbackError) {
+        console.error("Fallback copy also failed:", fallbackError);
+      }
+    }
+  };
 
   // Date formatting utility
   const formatDate = (dateString: string) => {

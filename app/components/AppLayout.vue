@@ -27,6 +27,13 @@
       @update="handleUpdateNote"
     />
 
+    <NoteShowModal
+      :is-open="isShowModalOpen"
+      :note="showingNote"
+      @close="closeShowModal"
+      @edit="handleEditFromShow"
+    />
+
     <DeleteModal
       :is-open="isDeleteModalOpen"
       :note-title="deletingNote?.title || ''"
@@ -47,6 +54,7 @@
   import AppHeader from "~/components/AppHeader.vue";
   import MobileSearchBar from "~/components/MobileSearchBar.vue";
   import NoteModal from "~/components/NoteModal.vue";
+  import NoteShowModal from "~/components/NoteShowModal.vue";
   import DeleteModal from "~/components/DeleteModal.vue";
   import ToastNotification from "~/components/ToastNotification.vue";
 
@@ -69,8 +77,10 @@
 
   // Modal states
   const isNoteModalOpen = ref(false);
+  const isShowModalOpen = ref(false);
   const isDeleteModalOpen = ref(false);
   const editingNote = ref<Note | null>(null);
+  const showingNote = ref<Note | null>(null);
   const deletingNote = ref<Note | null>(null);
 
   // Toast notification
@@ -128,6 +138,22 @@
   const closeNoteModal = () => {
     isNoteModalOpen.value = false;
     editingNote.value = null;
+  };
+
+  const openShowModal = (note: Note) => {
+    showingNote.value = note;
+    isShowModalOpen.value = true;
+  };
+
+  const closeShowModal = () => {
+    isShowModalOpen.value = false;
+    showingNote.value = null;
+  };
+
+  const handleEditFromShow = (note: Note) => {
+    // Close show modal and open edit modal
+    closeShowModal();
+    openNoteModal(note);
   };
 
   const openDeleteModal = (note: Note) => {
@@ -215,6 +241,7 @@
 
   // Provide global functions for child components
   provide("openNoteModal", openNoteModal);
+  provide("openShowModal", openShowModal);
   provide("openDeleteModal", openDeleteModal);
   provide("showToastMessage", showToastMessage);
   provide("searchQuery", searchQuery);

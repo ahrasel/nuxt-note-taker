@@ -35,7 +35,7 @@
       @complete="handleComplete"
       @archive="handleArchive"
       @delete="handleDelete"
-      @view="openNoteModal"
+      @view="handleView"
     />
 
     <!-- Empty State -->
@@ -69,6 +69,7 @@
 
   // Inject functions from AppLayout
   const openNoteModal = inject("openNoteModal") as (note?: Note) => void;
+  const openShowModal = inject("openShowModal") as (note: Note) => void;
   const openDeleteModal = inject("openDeleteModal") as (note: Note) => void;
   const showToastMessage = inject("showToastMessage") as (message: string) => void;
 
@@ -129,6 +130,10 @@
   // Note actions
   const handleEdit = (note: Note) => {
     openNoteModal(note);
+  };
+
+  const handleView = (note: Note) => {
+    openShowModal(note);
   };
 
   const handlePin = async (note: Note) => {
